@@ -26,6 +26,13 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
 		String pwd = authentication.getCredentials().toString();
 		UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 		return new UsernamePasswordAuthenticationToken(username, pwd, userDetails.getAuthorities());
+	
+//		if(passwordEncoder.matches(pwd, userDetails.getPassword())) {
+//			// Perform all the Custom Validation Logic
+//			return new UsernamePasswordAuthenticationToken(username, pwd, userDetails.getAuthorities());
+//		} else {
+//			throw new BadCredentialsException("Invalid Password");
+//		}
 	}
 
 	@Override

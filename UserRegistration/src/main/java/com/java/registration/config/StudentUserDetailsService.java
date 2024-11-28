@@ -25,16 +25,15 @@ public class StudentUserDetailsService implements UserDetailsService{
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		Student student = repo.findByEmail(username).orElseThrow(() -> 
-		new UsernameNotFoundException("User details not found for username: " + username));
+		new UsernameNotFoundException("Student details not found for email: " + username));
 		
 		List<GrantedAuthority> authorities = student
 				.getRoles()
 				.stream()
 				.map(authority -> new
-                SimpleGrantedAuthority(authority.getName()))
+						SimpleGrantedAuthority(authority.getName()))
 				.collect(Collectors.toList());
 		
-		System.err.println("SIMPLE GRANTED AUTHORITIES: " + authorities);
 		return new User(student.getEmail(), student.getPassword(), authorities);
 	}
 }

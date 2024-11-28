@@ -45,7 +45,7 @@ public class ProjectSecurityConfig {
         	.cors(withDefaults())
 
             .csrf((csrfConfig) -> csrfConfig
-        		.ignoringRequestMatchers("/home**", "/login", "/register-student", "/register-role", "/assign-roles", "/get-student-by-email")
+        		.ignoringRequestMatchers("/home**", "/login", "/register-student", "/register-role", "/assign-roles", "/get-student-count", "/get-students-list-by-email")
         		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
         		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
 
@@ -53,8 +53,10 @@ public class ProjectSecurityConfig {
 
             .authorizeHttpRequests((requests) -> 
                 requests.requestMatchers("/api/v1/**").permitAll()
-            		.requestMatchers("/student").authenticated()
-                    .requestMatchers("/home**", "/about", "/contact", "/register-student", "/register-role", "/error", "/login", "/assign-roles", "/get-student-by-email").permitAll())
+                		.requestMatchers("/get-student-count").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                		.requestMatchers("/get-students-list-by-email").hasRole("ADMIN")
+                		.requestMatchers("/student").authenticated()
+                		.requestMatchers("/home**", "/about", "/contact", "/register-student", "/register-role", "/error", "/login", "/assign-roles").permitAll())
             .formLogin(withDefaults())
             .httpBasic(withDefaults());
 
