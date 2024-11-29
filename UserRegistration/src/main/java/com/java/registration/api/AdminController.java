@@ -27,11 +27,17 @@ public class AdminController {
 	private final PasswordEncoder passwordEncoder;
 	
 	@PostMapping(path = "/register-student")
-	public ResponseEntity<String> registerNewStudent(@RequestBody Student student){
+	public ResponseEntity<String> registerNewStudent(@RequestBody Student student) {
 		try {
+			Student lastStudent = repo.findTopByOrderByIdDesc();
 			String hashPwd = passwordEncoder.encode(student.getPassword());
 			student.setPassword(hashPwd);
+			student.setStudent_id(lastStudent.getStudent_id() + 1);
 			Student savedStudent = repo.save(student);
+			
+			this.assignRoleToStudent("ROLE_BASIC_USER", student.getEmail());
+			
+			System.err.println(lastStudent);
 			
 			if(savedStudent.getStudent_id() > 0) {
 				return ResponseEntity
@@ -50,7 +56,7 @@ public class AdminController {
 	}
 	
 	@PostMapping(path = "/register-role")
-	public ResponseEntity<String> registerNewRole(@RequestBody Role role){
+	public ResponseEntity<String> registerNewRole(@RequestBody Role role) {
 		try {
 			Role savedRole = rolesRepo.save(role);
 			
@@ -72,7 +78,7 @@ public class AdminController {
 	
 	@PostMapping(path = "/assign-roles")
 	public ResponseEntity<String> assignRoleToStudent(@RequestParam String role, 
-														@RequestParam String email){
+														@RequestParam String email) {
 		
 		// Fetch the student by ID
 	    Student student = repo.findByEmail(email)
@@ -102,4 +108,5 @@ public class AdminController {
 				.status(HttpStatus.OK)
 				.body("Role Assigned To Student");
 	}
+	
 }
