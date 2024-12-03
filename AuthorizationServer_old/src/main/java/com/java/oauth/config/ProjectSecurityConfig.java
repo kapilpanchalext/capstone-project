@@ -18,6 +18,7 @@ import org.springframework.security.authentication.password.CompromisedPasswordC
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -60,13 +61,12 @@ public class ProjectSecurityConfig {
 				OAuth2AuthorizationServerConfigurer.authorizationServer();
 
 		http
+		.sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
 			.with(authorizationServerConfigurer, (authorizationServer) ->
 				authorizationServer
-					.oidc(Customizer.withDefaults())	// Enable OpenID Connect 1.0
+					.oidc(Customizer.withDefaults())
 			)
-			// Redirect to the login page when not authenticated from the
-			// authorization endpoint
 			.exceptionHandling((exceptions) -> exceptions
 				.defaultAuthenticationEntryPointFor(
 					new LoginUrlAuthenticationEntryPoint("/login"),
@@ -85,8 +85,6 @@ public class ProjectSecurityConfig {
 			.authorizeHttpRequests((authorize) -> authorize
 				.anyRequest().authenticated()
 			)
-			// Form login handles the redirect to the login page from the
-			// authorization server filter chain
 			.formLogin(Customizer.withDefaults());
 
 		return http.build();
@@ -100,10 +98,14 @@ public class ProjectSecurityConfig {
 				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
 				.redirectUri("https://oauth.pstmn.io/v1/callback")
-				.scope(OidcScopes.OPENID).scope(OidcScopes.EMAIL)
+				.scope(OidcScopes.OPENID)
+				.scope(OidcScopes.EMAIL)
 				.clientSettings(ClientSettings.builder().requireProofKey(true).build())
-				.tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofMinutes(10))
-						.refreshTokenTimeToLive(Duration.ofHours(8)).reuseRefreshTokens(false)
+				.tokenSettings(TokenSettings
+						.builder()
+						.accessTokenTimeToLive(Duration.ofMinutes(1))
+						.refreshTokenTimeToLive(Duration.ofHours(8))
+						.reuseRefreshTokens(false)
 						.accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED)
 						.build())
 				.build();
@@ -178,5 +180,4 @@ public class ProjectSecurityConfig {
 	CompromisedPasswordChecker compromisedPasswordChecker() {
 		return new HaveIBeenPwnedRestApiPasswordChecker();
 	}
-	
 }

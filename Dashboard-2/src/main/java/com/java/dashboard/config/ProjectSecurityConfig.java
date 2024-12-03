@@ -3,21 +3,14 @@ package com.java.dashboard.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.password.CompromisedPasswordChecker;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -34,6 +27,9 @@ public class ProjectSecurityConfig {
 
 	@Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+		
+		JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new RoleConverter());
 
 		CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = 
 				new CsrfTokenRequestAttributeHandler();
@@ -41,24 +37,17 @@ public class ProjectSecurityConfig {
         http
         	.sessionManagement((sessionConfig) -> sessionConfig
         											.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
         	.cors(withDefaults())
-
             .csrf((csrfConfig) -> csrfConfig
-        		.ignoringRequestMatchers("/home**", "/login", "/register-student", "/register-role", "/assign-roles", "/get-logged-student-details", "/get-student-count", "/get-students-list-by-email")
+        		.ignoringRequestMatchers("/api/v1/**")
         		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
         		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
-
             .authorizeHttpRequests((requests) -> 
-                requests.requestMatchers("/api/v1/**").permitAll()
-                		.requestMatchers("/get-student-count").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                		.requestMatchers("/get-students-list-by-email").hasRole("ADMIN")
-                		.requestMatchers("/get-logged-student-details").hasRole("ADMIN")
-                		.requestMatchers("/home**", "/about", "/contact", "/register-student", "/register-role", "/assign-roles", "/error", "/login").permitAll())
-            .formLogin(withDefaults())
-            .httpBasic(withDefaults());
+                requests.requestMatchers("/api/v1/**").hasAnyRole("ADMIN")
+                		.requestMatchers("/home**", "/about", "/contact").permitAll())
+            .oauth2ResourceServer((rsc) -> rsc.jwt((jwtConfigurer) -> 
+            		jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter)));
 
         return http.build();
     }
@@ -66,7 +55,7 @@ public class ProjectSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
@@ -77,24 +66,4 @@ public class ProjectSecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-    
-//	@Bean
-//    PasswordEncoder passwordEncoder() {
-//        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-//    }
-//
-//    @Bean
-//    CompromisedPasswordChecker compromisedPasswordChecker() {
-//        return new HaveIBeenPwnedRestApiPasswordChecker();
-//    }
-//    
-//    @Bean
-//	AuthenticationManager authenticationManager(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
-//		
-//    	UsernamePasswordAuthenticationProvider authenticationProvider = 
-//				new UsernamePasswordAuthenticationProvider(userDetailsService, passwordEncoder);
-//		ProviderManager providerManager = new ProviderManager(authenticationProvider);
-//		providerManager.setEraseCredentialsAfterAuthentication(false);
-//		return providerManager;
-//	}
 }
