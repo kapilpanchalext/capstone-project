@@ -1,10 +1,13 @@
 package com.java.oauth.config;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -40,15 +43,25 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.java.oauth.filter.CsrfCookieFilter;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
+@RequiredArgsConstructor
 public class ProjectSecurityConfig {
 	
 	@Bean 
@@ -80,14 +93,32 @@ public class ProjectSecurityConfig {
 	@Order(2)
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
 			throws Exception {
+		
+		CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = 
+				new CsrfTokenRequestAttributeHandler();
+		
 		http
-			.authorizeHttpRequests((authorize) -> authorize
-				.anyRequest().authenticated()
-			)
+    		.cors(withDefaults())
+
+	        .csrf((csrfConfig) -> csrfConfig
+	    		.ignoringRequestMatchers("/login")
+	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
+	    		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+				.authorizeHttpRequests((authorize) -> authorize
+				.anyRequest().authenticated())
+			
+//			.sessionManagement((sessionConfig) -> sessionConfig
+//					.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			
 			// Form login handles the redirect to the login page from the
 			// authorization server filter chain
+//			.addFilterBefore(new RequestCacheFilter(), UsernamePasswordAuthenticationFilter.class)
+//			.addFilterBefore(new JwtTokenValidatorFilter(), BasicAuthenticationFilter.class)
+			.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+//			.addFilterAfter(new JwtTokenGeneratorFilter(), BasicAuthenticationFilter.class)
+//			.formLogin(flc -> flc.defaultSuccessUrl("http://localhost:8084/oauth2/token").permitAll());
 			.formLogin(Customizer.withDefaults());
-
+		
 		return http.build();
 	}
 	
@@ -125,7 +156,7 @@ public class ProjectSecurityConfig {
 				.clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
 				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-				.redirectUri("http://localhost:3000") //https://oauth.pstmn.io/v1/callback
+				.redirectUri("https://oauth.pstmn.io/v1/callback") //https://oauth.pstmn.io/v1/callback
 				.scope(OidcScopes.OPENID)
 				.scope(OidcScopes.EMAIL)
 				.clientSettings(ClientSettings.builder().requireProofKey(true).build())
@@ -138,6 +169,21 @@ public class ProjectSecurityConfig {
 
 		return new InMemoryRegisteredClientRepository(clientCredClient, authCodeClient, pkceClient);
 	}
+	
+	@Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 	
 	@Bean 
 	JWKSource<SecurityContext> jwkSource() {
