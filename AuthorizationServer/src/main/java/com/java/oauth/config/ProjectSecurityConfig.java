@@ -1,7 +1,5 @@
 package com.java.oauth.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
@@ -94,18 +92,20 @@ public class ProjectSecurityConfig {
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
 			throws Exception {
 		
-		CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = 
-				new CsrfTokenRequestAttributeHandler();
+//		CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = 
+//				new CsrfTokenRequestAttributeHandler();
 		
 		http
-    		.cors(withDefaults())
-
-	        .csrf((csrfConfig) -> csrfConfig
-	    		.ignoringRequestMatchers("/login")
-	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
-	    		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-				.authorizeHttpRequests((authorize) -> authorize
-				.anyRequest().authenticated())
+			.authorizeHttpRequests((authorize) -> authorize
+              .anyRequest().authenticated())
+//    		.cors(cors -> cors.disable())
+//
+//	        .csrf((csrfConfig) -> csrfConfig
+//	    		.ignoringRequestMatchers("/login")
+//	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
+//	    		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+//				.authorizeHttpRequests((authorize) -> authorize
+//													.anyRequest().authenticated())
 			
 //			.sessionManagement((sessionConfig) -> sessionConfig
 //					.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -114,13 +114,28 @@ public class ProjectSecurityConfig {
 			// authorization server filter chain
 //			.addFilterBefore(new RequestCacheFilter(), UsernamePasswordAuthenticationFilter.class)
 //			.addFilterBefore(new JwtTokenValidatorFilter(), BasicAuthenticationFilter.class)
-			.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+//			.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
 //			.addFilterAfter(new JwtTokenGeneratorFilter(), BasicAuthenticationFilter.class)
 //			.formLogin(flc -> flc.defaultSuccessUrl("http://localhost:8084/oauth2/token").permitAll());
 			.formLogin(Customizer.withDefaults());
 		
 		return http.build();
 	}
+	
+//	@Bean
+//    @Order(2)
+//    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
+//            throws Exception {
+//        http
+//                .authorizeHttpRequests((authorize) -> authorize
+//                        .anyRequest().authenticated()
+//                )
+//                // Form login handles the redirect to the login page from the
+//                // authorization server filter chain
+//                .formLogin(Customizer.withDefaults());
+//
+//        return http.build();
+//    }
 	
 	@Bean 
 	RegisteredClientRepository registeredClientRepository() {
@@ -170,20 +185,20 @@ public class ProjectSecurityConfig {
 		return new InMemoryRegisteredClientRepository(clientCredClient, authCodeClient, pkceClient);
 	}
 	
-	@Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
-        configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+//	@Bean
+//    CorsConfigurationSource corsConfigurationSource() {
+//        CorsConfiguration configuration = new CorsConfiguration();
+//        configuration.setAllowedOrigins(Arrays.asList("*"));
+//        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+//        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+//        configuration.setAllowCredentials(true);
+//        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+//        configuration.setMaxAge(3600L);
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", configuration);
+//        return source;
+//    }
 	
 	@Bean 
 	JWKSource<SecurityContext> jwkSource() {
