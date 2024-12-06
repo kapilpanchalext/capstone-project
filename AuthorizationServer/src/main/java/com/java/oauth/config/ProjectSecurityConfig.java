@@ -5,7 +5,6 @@ import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -41,15 +40,8 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.java.oauth.filter.CsrfCookieFilter;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -73,7 +65,7 @@ public class ProjectSecurityConfig {
 			.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
 			.with(authorizationServerConfigurer, (authorizationServer) ->
 				authorizationServer
-					.oidc(Customizer.withDefaults())	// Enable OpenID Connect 1.0
+					.oidc(Customizer.withDefaults())
 			)
 			// Redirect to the login page when not authenticated from the
 			// authorization endpoint
@@ -98,6 +90,7 @@ public class ProjectSecurityConfig {
 		http
 			.authorizeHttpRequests((authorize) -> authorize
               .anyRequest().authenticated())
+			.anonymous(anonymous -> anonymous.disable())
 //    		.cors(cors -> cors.disable())
 //
 //	        .csrf((csrfConfig) -> csrfConfig
