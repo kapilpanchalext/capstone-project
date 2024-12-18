@@ -2,7 +2,6 @@ package org.apache.coyote.http11;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -610,37 +609,37 @@ public class Http11Processor extends AbstractProcessor {
 //                || clazz.equals(Character.class) || clazz.equals(Byte.class) || clazz.equals(Short.class)
 //                || clazz.equals(Double.class) || clazz.equals(Long.class) || clazz.equals(Float.class);
 //    }
-    
-    public static List<Field> getAllFields(Object obj) {
-        List<Field> fields = new ArrayList<>();
-        Class<?> clazz = obj.getClass();
-        
-        // Traverse the class hierarchy
-        while (clazz != null) {
-            // Add declared fields of the current class
-            Field[] declaredFields = clazz.getDeclaredFields();
-            for (Field field : declaredFields) {
-                field.setAccessible(true); // Bypass private and protected modifiers
-                fields.add(field);
-            }
-            // Move to the superclass
-            clazz = clazz.getSuperclass();
-        }
-        
-        return fields;
-    }
-    
-    public static void printFieldValues(Object obj) {
-        List<Field> fields = getAllFields(obj);
-        for (Field field : fields) {
-            try {
-                Object value = field.get(obj); // Get the field value
-                System.out.println(field.getName() + " = " + value);
-            } catch (IllegalAccessException e) {
-                System.err.println("Cannot access field: " + field.getName());
-            }
-        }
-    }
+//    
+//    public static List<Field> getAllFields(Object obj) {
+//        List<Field> fields = new ArrayList<>();
+//        Class<?> clazz = obj.getClass();
+//        
+//        // Traverse the class hierarchy
+//        while (clazz != null) {
+//            // Add declared fields of the current class
+//            Field[] declaredFields = clazz.getDeclaredFields();
+//            for (Field field : declaredFields) {
+//                field.setAccessible(true); // Bypass private and protected modifiers
+//                fields.add(field);
+//            }
+//            // Move to the superclass
+//            clazz = clazz.getSuperclass();
+//        }
+//        
+//        return fields;
+//    }
+//    
+//    public static void printFieldValues(Object obj) {
+//        List<Field> fields = getAllFields(obj);
+//        for (Field field : fields) {
+//            try {
+//                Object value = field.get(obj); // Get the field value
+//                System.out.println(field.getName() + " = " + value);
+//            } catch (IllegalAccessException e) {
+//                System.err.println("Cannot access field: " + field.getName());
+//            }
+//        }
+//    }
 
     /**
      * After reading the request headers, we have to setup the request filters.
@@ -1126,7 +1125,7 @@ public class Http11Processor extends AbstractProcessor {
             long end = ((Long) request.getAttribute(org.apache.coyote.Constants.SENDFILE_FILE_END_ATTR)).longValue();
             sendfileData = socketWrapper.createSendfileData(fileName, pos, end - pos);
             
-            printFieldValues(outputBuffer);
+//            printFieldValues(outputBuffer);
             
         }
     }

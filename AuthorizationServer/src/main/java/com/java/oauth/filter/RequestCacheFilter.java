@@ -25,7 +25,7 @@ public class RequestCacheFilter extends OncePerRequestFilter {
 		if (!SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
 	            requestCache.saveRequest(request, response);
 		}
-		System.err.println(requestCache);
+		System.err.println(requestCache.toString());
         filterChain.doFilter(request, response);
 	}
 }

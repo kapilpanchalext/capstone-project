@@ -264,5 +264,4 @@ public class ProjectSecurityConfig {
     CompromisedPasswordChecker compromisedPasswordChecker() {
         return new HaveIBeenPwnedRestApiPasswordChecker();
     }
-    
 }

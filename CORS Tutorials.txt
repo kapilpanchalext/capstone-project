@@ -1,0 +1,10 @@
+Cross-Origin Resource Sharing (CORS) | Complete Guide - by Rana Khalil
+85.9K subscribers
+
+time (14:55/52.16)
+
+CORS Headers:
+
+CORS Makes use of 2 headers:
+1) Access-Control-Allow-Origin
+2) Access-Control-Allow-Credentials
