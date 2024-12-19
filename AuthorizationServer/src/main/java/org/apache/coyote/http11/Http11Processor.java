@@ -89,29 +89,30 @@ public class Http11Processor extends AbstractProcessor {
         request.setInputBuffer(inputBuffer);
 
         outputBuffer = new Http11OutputBuffer(response, protocol.getMaxHttpResponseHeaderSize());
+        System.err.println("1: " + outputBuffer.toString());
         response.setOutputBuffer(outputBuffer);
-
+        
         // Create and add the identity filters.
         inputBuffer.addFilter(new IdentityInputFilter(protocol.getMaxSwallowSize()));
         outputBuffer.addFilter(new IdentityOutputFilter());
-
+        System.err.println("2: " + outputBuffer.toString());
         // Create and add the chunked filters.
         inputBuffer.addFilter(new ChunkedInputFilter(request, protocol.getMaxTrailerSize(),
                 protocol.getAllowedTrailerHeadersInternal(), protocol.getMaxExtensionSize(),
                 protocol.getMaxSwallowSize()));
         outputBuffer.addFilter(new ChunkedOutputFilter());
-
+        System.err.println("3: " + outputBuffer.toString());
         // Create and add the void filters.
         inputBuffer.addFilter(new VoidInputFilter());
         outputBuffer.addFilter(new VoidOutputFilter());
-
+        System.err.println("4: " + outputBuffer.toString());
         // Create and add buffered input filter
         inputBuffer.addFilter(new BufferedInputFilter(protocol.getMaxSwallowSize()));
 
         // Create and add the gzip filters.
         // inputBuffer.addFilter(new GzipInputFilter());
         outputBuffer.addFilter(new GzipOutputFilter());
-
+        System.err.println("5: " + outputBuffer.toString());
         pluggableFilterIndex = inputBuffer.getFilters().length;
     }
 
