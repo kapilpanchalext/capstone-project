@@ -96,16 +96,12 @@ public class ProjectSecurityConfig {
 		http
 			.authorizeHttpRequests((authorize) -> authorize
               .anyRequest().authenticated())
-//			.anonymous(anonymous -> anonymous.disable())
     		.cors(Customizer.withDefaults())
 
 	        .csrf((csrfConfig) -> csrfConfig
 	    		.ignoringRequestMatchers("/login")
 	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
 	    		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-			
-//			.sessionManagement((sessionConfig) -> sessionConfig
-//					.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			
 			// Form login handles the redirect to the login page from the
 			// authorization server filter chain
