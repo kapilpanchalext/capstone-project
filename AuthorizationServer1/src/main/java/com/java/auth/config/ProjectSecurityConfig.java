@@ -7,7 +7,6 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -97,9 +96,8 @@ public class ProjectSecurityConfig {
 			.authorizeHttpRequests((authorize) -> authorize
               .anyRequest().authenticated())
     		.cors(Customizer.withDefaults())
-
 	        .csrf((csrfConfig) -> csrfConfig
-	    		.ignoringRequestMatchers("/login")
+	    		.ignoringRequestMatchers("/oauth2/authorize", "/login")
 	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
 	    		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
 			
@@ -117,32 +115,6 @@ public class ProjectSecurityConfig {
 	
 	@Bean 
 	RegisteredClientRepository registeredClientRepository() {
-		RegisteredClient clientCredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-				.clientId("capstone-project-1")
-				.clientSecret("{noop}d4b282fd24ed88884fc21a3c1f9f0423af9452")
-				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-				.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-				.scopes((scopeConfig) -> scopeConfig.addAll(List.of(OidcScopes.OPENID, "ADMIN")))
-				.tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofMinutes(1))
-						.accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED).build())
-				.build();
-		
-		RegisteredClient authCodeClient = RegisteredClient.withId(UUID.randomUUID().toString())
-				.clientId("capstone-project-auth-code-1")
-				.clientSecret("{noop}d4b282fd24ed88884fc21a3c1f9f0423af9451")
-				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-				.redirectUri("https://oauth.pstmn.io/v1/callback")
-				.scope(OidcScopes.OPENID)
-				.scope(OidcScopes.EMAIL)
-				.tokenSettings(TokenSettings.builder()
-						.refreshTokenTimeToLive(Duration.ofHours(8))
-						.reuseRefreshTokens(false)
-						.accessTokenTimeToLive(Duration.ofMinutes(1))
-						.accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED).build())
-				.build();
 		
 		RegisteredClient pkceClient = RegisteredClient.withId(UUID.randomUUID().toString())
 				.clientId("capstone-project-auth-code-pkce-1")
@@ -160,20 +132,26 @@ public class ProjectSecurityConfig {
 						.accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED).build())
 				.build();
 
-		return new InMemoryRegisteredClientRepository(clientCredClient, authCodeClient, pkceClient);
+		return new InMemoryRegisteredClientRepository(pkceClient);
 	}
 	
 	@Bean
     CorsConfigurationSource corsConfigurationSource() {
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+//        configuration.addAllowedOriginPattern("*");
+//        configuration.setAllowedOrigins(Arrays.asList("*"));
+//        configuration.addAllowedOrigin("*");
+//        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.addAllowedOrigin("http://localhost:3000");
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+//        configuration.addAllowedHeader("*");
+//        configuration.addAllowedMethod("*");
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+//        configuration.setExposedHeaders(Arrays.asList("Authorization"));
         configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
