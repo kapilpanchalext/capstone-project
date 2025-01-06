@@ -44,7 +44,6 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.nimbusds.jose.jwk.JWKSet;
@@ -135,26 +134,39 @@ public class ProjectSecurityConfig {
 		return new InMemoryRegisteredClientRepository(pkceClient);
 	}
 	
+	/*
+//	@Bean
+//    CorsConfigurationSource corsConfigurationSource() {
+//		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        CorsConfiguration configuration = new CorsConfiguration();
+////        configuration.addAllowedOriginPattern("*");
+////        configuration.setAllowedOrigins(Arrays.asList("*"));
+////        configuration.addAllowedOrigin("*");
+////        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+//        configuration.addAllowedOrigin("http://localhost:3000");
+//        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+//        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+////        configuration.addAllowedHeader("*");
+////        configuration.addAllowedMethod("*");
+//        configuration.setAllowCredentials(true);
+////        configuration.setAllowedHeaders(Arrays.asList("Authorization"));
+//        configuration.setMaxAge(3600L);
+//        
+//        source.registerCorsConfiguration("/**", configuration);
+//        return source;
+//    }
+	*/
+	
 	@Bean
-    CorsConfigurationSource corsConfigurationSource() {
+	UrlBasedCorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.addAllowedOriginPattern("*");
-//        configuration.setAllowedOrigins(Arrays.asList("*"));
-//        configuration.addAllowedOrigin("*");
-//        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-        configuration.addAllowedOrigin("http://localhost:3000");
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-//        configuration.addAllowedHeader("*");
-//        configuration.addAllowedMethod("*");
-        configuration.setAllowCredentials(true);
-//        configuration.setExposedHeaders(Arrays.asList("Authorization"));
-        configuration.setMaxAge(3600L);
-        
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
+	}
 	
 	@Bean 
 	JWKSource<SecurityContext> jwkSource() {
