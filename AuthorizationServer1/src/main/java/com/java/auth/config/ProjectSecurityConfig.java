@@ -15,8 +15,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.password.CompromisedPasswordChecker;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -39,13 +41,16 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
+import com.java.auth.filter.LoginRedirectFilter;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -55,7 +60,6 @@ import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
-@RequiredArgsConstructor
 public class ProjectSecurityConfig {
 	
 	@Bean 
@@ -85,7 +89,7 @@ public class ProjectSecurityConfig {
 	
 	@Bean 
 	@Order(2)
-	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
+	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, LoginRedirectFilter loginRedirectFilter)
 			throws Exception {
 		
 		CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = 
@@ -95,6 +99,7 @@ public class ProjectSecurityConfig {
 			.authorizeHttpRequests((authorize) -> authorize
               .anyRequest().authenticated())
     		.cors(Customizer.withDefaults())
+    		.addFilterBefore(loginRedirectFilter, CorsFilter.class)
 	        .csrf((csrfConfig) -> csrfConfig
 	    		.ignoringRequestMatchers("/oauth2/authorize", "/login")
 	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
@@ -231,6 +236,11 @@ public class ProjectSecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
+    @Bean
+    AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class).build();
+    }
+    
     @Bean
     CompromisedPasswordChecker compromisedPasswordChecker() {
         return new HaveIBeenPwnedRestApiPasswordChecker();
