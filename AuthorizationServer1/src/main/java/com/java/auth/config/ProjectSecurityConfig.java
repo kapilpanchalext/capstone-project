@@ -41,14 +41,13 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import com.java.auth.filter.LoginRedirectFilter;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -56,8 +55,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 public class ProjectSecurityConfig {
@@ -97,9 +94,9 @@ public class ProjectSecurityConfig {
 		
 		http
 			.authorizeHttpRequests((authorize) -> authorize
-              .anyRequest().authenticated())
+            .anyRequest().authenticated())
     		.cors(Customizer.withDefaults())
-    		.addFilterBefore(loginRedirectFilter, CorsFilter.class)
+    		.addFilterBefore(loginRedirectFilter, SecurityContextHolderFilter.class)
 	        .csrf((csrfConfig) -> csrfConfig
 	    		.ignoringRequestMatchers("/oauth2/authorize", "/login")
 	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
@@ -168,6 +165,7 @@ public class ProjectSecurityConfig {
 		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+		configuration.setAllowCredentials(true);
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
