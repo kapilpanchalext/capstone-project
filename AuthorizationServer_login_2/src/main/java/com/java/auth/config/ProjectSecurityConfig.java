@@ -74,7 +74,7 @@ public class ProjectSecurityConfig {
 			// authorization endpoint
 			.exceptionHandling((exceptions) -> exceptions
 				.defaultAuthenticationEntryPointFor(
-					new LoginUrlAuthenticationEntryPoint("/login"),
+					new LoginUrlAuthenticationEntryPoint("/custom-login"),
 					new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
 				)
 			);
@@ -92,13 +92,15 @@ public class ProjectSecurityConfig {
 		
 		http
 			.authorizeHttpRequests((authorize) -> authorize
-            .anyRequest().authenticated())
+//				.requestMatchers("/oauth2/authorize", "/login", "/custom-login", "/static/**", "/resources/**").permitAll()
+	            .anyRequest().authenticated())
     		.cors(Customizer.withDefaults())
 	        .csrf((csrfConfig) -> csrfConfig
-	    		.ignoringRequestMatchers("/oauth2/authorize", "/login")
+	    		.ignoringRequestMatchers("/oauth2/authorize", "/login", "/custom-login", "/static/**", "/resources/**")
 	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
 	    		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-			.formLogin(Customizer.withDefaults());
+	        .formLogin(form -> form.loginPage("/custom-login").permitAll())
+	        .logout(logout -> logout.permitAll());
 		
 		return http.build();
 	}
