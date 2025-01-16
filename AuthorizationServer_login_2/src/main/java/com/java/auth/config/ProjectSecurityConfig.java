@@ -41,6 +41,7 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -48,6 +49,7 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.java.auth.filter.CustomAuthorizationFilter;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -94,12 +96,13 @@ public class ProjectSecurityConfig {
 			.authorizeHttpRequests((authorize) -> authorize
 				.requestMatchers("/oauth2/authorize", "/login", "/static/**", "/resources/**").permitAll()
 	            .anyRequest().authenticated())
+			.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
     		.cors(Customizer.withDefaults())
 	        .csrf((csrfConfig) -> csrfConfig
 	    		.ignoringRequestMatchers("/oauth2/authorize", "/login", "/static/**", "/resources/**")
 	    		.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
 	    		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-	        .formLogin(form -> form.loginPage("/login").permitAll())
+	        .formLogin(Customizer.withDefaults())
 	        .logout(logout -> logout.permitAll());
 		
 		return http.build();
