@@ -1,6 +1,8 @@
 package com.java.auth.filter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,8 +39,25 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
             if (session == null || SecurityContextHolder.getContext().getAuthentication() == null) {
                 try {
 //                     Authenticate the user programmatically
+                	String authHeader = request.getHeader("Authorization");
+                	if (true) {
+                	
+                	if (authHeader != null && authHeader.startsWith("Basic ")) {
+                        // Decode Base64 credentials
+                        String base64Credentials = authHeader.substring("Basic ".length());
+                        String credentials = new String(Base64.getDecoder().decode(base64Credentials), StandardCharsets.UTF_8);
+
+                        // Split into username and password
+                        String[] values = credentials.split(":", 2);
+                        if (values.length == 2) {
+                            String username = values[0];
+                            String password = values[1];
+                	
                     UsernamePasswordAuthenticationToken authRequest =
-                            new UsernamePasswordAuthenticationToken("admin@email.com", "1234");
+                            new UsernamePasswordAuthenticationToken(username, password);
+                	
+//                    UsernamePasswordAuthenticationToken authRequest =
+//                            new UsernamePasswordAuthenticationToken("admin@email.com", "1234");
                     
                     Authentication authResult = authenticationManager.authenticate(authRequest);
                     SecurityContextHolder.getContext().setAuthentication(authResult);
@@ -50,6 +69,9 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
                     // Log success
                     System.out.println("User authenticated successfully.");
+                        }
+                        }
+                    }
                 } catch (AuthenticationException e) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication Failed");
                     return;
